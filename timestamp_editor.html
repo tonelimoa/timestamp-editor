@@ -245,12 +245,27 @@ body.fullscreen-active{overflow:hidden;}
 .entry-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:10px 12px;margin-bottom:8px;transition:border-color .15s;}
 .entry-card:hover{border-color:var(--accent);}
 /* ファイルグループ別の色分け（2色交互・落ち着いたトーン） */
-.entry-card.file-color-0{border-left:3px solid #4fc3f7;background:linear-gradient(90deg,rgba(79,195,247,.06) 0%,var(--surface) 60%);}
-.entry-card.file-color-1{border-left:3px solid #80cbc4;background:linear-gradient(90deg,rgba(128,203,196,.06) 0%,var(--surface) 60%);}
-.entry-card.file-color-0:hover{border-color:#4fc3f7;}
-.entry-card.file-color-1:hover{border-color:#80cbc4;}
+.entry-card.file-color-0{border-left:4px solid #4fc3f7;background:rgba(79,195,247,.10);}
+.entry-card.file-color-1{border-left:4px solid var(--border);background:var(--surface2);}
+.entry-card.file-color-0:hover{border-color:#4fc3f7;background:rgba(79,195,247,.15);}
+.entry-card.file-color-1:hover{border-color:var(--accent);}
+/* グループ時間バー */
+.group-bars{margin-bottom:12px;display:flex;flex-direction:column;gap:6px;}
+.group-bar{display:flex;justify-content:space-between;align-items:center;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:7px 12px;font-size:11px;color:var(--text2);}
+.group-bar.over{border-color:var(--red);background:rgba(255,82,82,.07);}
+.group-bar-label{font-weight:700;letter-spacing:.04em;}
+.group-bar-value{font-family:'Share Tech Mono',monospace;font-size:14px;color:var(--accent);font-weight:bold;}
+.group-bar.over .group-bar-value{color:var(--red);}
+.group-bar-warn{color:var(--red);font-size:11px;display:none;}
+.group-bar.over .group-bar-warn{display:inline;}
 .card-summary{display:flex;align-items:center;gap:8px;cursor:pointer;user-select:none;}
 .entry-num{font-size:11px;font-weight:700;color:var(--accent);letter-spacing:.06em;white-space:nowrap;}
+.drag-handle{flex-shrink:0;font-size:16px;line-height:1;color:var(--text2);cursor:grab;padding:4px 2px;touch-action:none;user-select:none;}
+.drag-handle:active{cursor:grabbing;color:var(--accent);}
+.entry-card.dragging{opacity:.85;box-shadow:0 6px 18px rgba(0,0,0,.35);border-color:var(--accent);}
+.entry-drag-placeholder{border:2px dashed var(--accent);border-radius:var(--radius);margin-bottom:8px;background:rgba(79,195,247,.08);}
+.entry-card.filtered-hidden{display:none !important;}
+.player-filter-select{width:auto;min-width:120px;max-width:150px;font-size:12px;padding:5px 8px;}
 .entry-summary-info{flex:1;font-size:12px;color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .card-actions{display:flex;align-items:center;gap:5px;flex-shrink:0;}
 .toggle-arrow{font-size:10px;color:var(--text2);transition:transform .2s;display:inline-block;width:12px;text-align:center;}
@@ -485,12 +500,8 @@ input:focus,select:focus{border-color:var(--accent);}
 
     </div>
 
-    <div class="total-bar" id="totalBar">
-      <span>⏱ 動画合計時間</span>
-      <div>
-        <span class="total-value" id="totalValue">00:00</span>
-        <span class="total-warning" id="totalWarning"> ⚠ 2分超</span>
-      </div>
+    <div class="group-bars" id="groupBars">
+      <!-- グループ時間バーはJSで動的生成 -->
     </div>
 
     <div class="panel">
@@ -533,9 +544,14 @@ input:focus,select:focus{border-color:var(--accent);}
 
     <!-- SCENEリスト -->
     <div>
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;gap:8px;">
         <span style="font-size:11px;color:var(--text2);text-transform:uppercase;letter-spacing:.06em;">シーン一覧</span>
-        <button class="toggle-all-btn" id="toggleAllBtn" onclick="toggleAllEntries()">▼ すべて展開</button>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <select class="player-filter-select" id="playerFilterSelect" onchange="onPlayerFilterChange()" title="選手で絞り込み表示（詳細モードのみ）">
+            <option value="">表示: 全員</option>
+          </select>
+          <button class="toggle-all-btn" id="toggleAllBtn" onclick="toggleAllEntries()">▼ すべて展開</button>
+        </div>
       </div>
       <p id="liveLockNote" class="live-lock-note">🔒 計測中はシーンの確認・削除・手動追加はできません。Num- で停止すると操作できます。</p>
       <div id="entries"></div>
@@ -603,6 +619,8 @@ window.onload = () => {
   }
   renderPlayerGrid();
   initNumberKeyShortcuts();
+  initEntryDragReorder();
+  updateGroupBars();
 };
 
 // ===== 選手ボタンのナンバーキー操作（PCのみ。1〜9キー/テンキー1〜9→1〜9人目、0キー→10人目） =====
@@ -667,6 +685,7 @@ function setRecordMode(mode) {
   } else {
     simpleEntries = [];
   }
+  playerFilter = ''; // モード切替でシーンがクリアされるため選手絞り込みも解除
   recordMode = mode;
   saveStorage();
   applyRecordModeUI(mode);
@@ -817,6 +836,7 @@ function renderPlayerGrid() {
       return `<button type="button" class="fs-player-btn" data-player-index="${i}" onclick="tapPlayer('${escapeHtml(p)}',this)">${keySpan}<span class="fs-name">${escapeHtml(p)}</span></button>`;
     }).join('');
   }
+  renderPlayerFilterSelect();
 }
 
 
@@ -1568,6 +1588,10 @@ function setSceneListLocked(locked) {
   if (addBtn) addBtn.disabled = locked;
   const note = document.getElementById('liveLockNote');
   if (note) note.style.display = locked ? 'block' : 'none';
+  document.querySelectorAll('.drag-handle').forEach(h => {
+    h.style.opacity = locked ? '.3' : '';
+    h.style.cursor = locked ? 'not-allowed' : '';
+  });
 }
 
 // ===== Num+ / Num- でOBSのホットキーと同時操作（ライブ映像「見るだけ(OBS)」モード時のみ） =====
@@ -1628,8 +1652,9 @@ function renderSimpleEntries() {
   el.innerHTML = simpleEntries.map((e, i) => {
     const id = 'simple' + i;
     const locked = sceneListLocked;
-    return `<div class="entry-card" id="entry_${id}">
+    return `<div class="entry-card" id="entry_${id}" data-orig-index="${i}">
       <div class="card-summary" onclick="toggleSimpleScene('${id}')">
+        <span class="drag-handle" onclick="event.stopPropagation()" title="ドラッグして並び替え">⠿</span>
         <span class="entry-num">SCENE #${i+1}</span>
         <span class="entry-summary-info">${formatStopwatch(e.time)}　${escapeHtml(e.file||'(未設定)')}.mp4</span>
         <div class="card-actions" onclick="event.stopPropagation()">
@@ -1700,7 +1725,7 @@ function makeOpponentSelect(id) {
   const opts = opponents.length
     ? opponents.map(o=>`<option value="${escapeHtml(o)}">${escapeHtml(o)}</option>`).join('')
     : '<option value="">（対戦相手を追加してください）</option>';
-  return `<select id="opponent_${id}" onchange="updatePreview()">${opts}</select>`;
+  return `<select id="opponent_${id}" onchange="document.getElementById('summary_opponent_${id}').value=this.value;updateSummary(${id});updatePreview()">${opts}</select>`;
 }
 function makePlayerSelect(id) {
   const opts = allPlayers().length
@@ -1745,6 +1770,7 @@ function addEntry(prefill) {
   div.className = `entry-card file-color-${colorIdx}`; div.id = `entry_${id}`;
   div.innerHTML = `
     <div class="card-summary" onclick="toggleEntryDetail(${id})">
+      <span class="drag-handle" onclick="event.stopPropagation()" title="ドラッグして並び替え">⠿</span>
       <span class="entry-num" id="num_${id}">SCENE #?</span>
       <span class="entry-summary-info" id="summary_${id}">—</span>
       <div class="card-actions" onclick="event.stopPropagation()">
@@ -1753,6 +1779,8 @@ function addEntry(prefill) {
         <span class="toggle-arrow" id="arrow_${id}">▶</span>
       </div>
     </div>
+    <input type="hidden" id="half_${id}" value="">
+    <input type="hidden" id="summary_opponent_${id}" value="">
     <div class="entry-detail collapsed" id="detail_${id}">
       <div class="fields">
         <div class="field"><label>ファイル名</label>
@@ -1776,7 +1804,7 @@ function addEntry(prefill) {
           <div class="sec-wrap"><input type="range" min="0" max="15" value="${POST_SEC}" id="post_${id}"
             oninput="document.getElementById('post_val_${id}').textContent=this.value;updatePreview()"></div></div>
         <div class="field"><label>選手名</label><div id="player_wrap_${id}">${makePlayerSelect(id)}</div></div>
-        <input type="hidden" id="half_${id}" value="">
+        <div class="field" style="grid-column:1/-1"><label>グループ（SNS分割用）</label><div id="group_wrap_${id}"><select id="group_${id}" onchange="onGroupChange(${id})"><option value="1">G1</option></select></div></div>
       </div>
     </div>`;
   document.getElementById('entries').appendChild(div);
@@ -1788,6 +1816,8 @@ function addEntry(prefill) {
     document.getElementById(`file_${id}`).value = prefill.file||'';
     const evSel=document.getElementById(`event_${id}`); if(evSel) evSel.value=prefill.event||'';
     const opSel=document.getElementById(`opponent_${id}`); if(opSel) opSel.value=prefill.opponent||'';
+    // summary用にhiddenにも保持
+    const opHidden=document.getElementById(`summary_opponent_${id}`); if(opHidden) opHidden.value=prefill.opponent||matchSettings.opponent||'';
     document.getElementById(`date_${id}`).value = prefill.date||todayStr();
     document.getElementById(`ts_min_${id}`).value = prefill.min??0;
     document.getElementById(`ts_sec_${id}`).value = prefill.sec??0;
@@ -1797,9 +1827,13 @@ function addEntry(prefill) {
     // 前後半情報をhiddenに保存
     const halfEl=document.getElementById(`half_${id}`); if(halfEl) halfEl.value=prefill.half||matchSettings.half||'';
   } else {
-    // 手動追加時もmatchSettingsのhalfを引き継ぐ
+    // 手動追加時もmatchSettingsのhalf・opponentを引き継ぐ
     const halfEl=document.getElementById(`half_${id}`); if(halfEl) halfEl.value=matchSettings.half||'';
+    const opHidden=document.getElementById(`summary_opponent_${id}`); if(opHidden) opHidden.value=matchSettings.opponent||'';
   }
+  // グループセレクトを更新してから自動振り分け
+  updateGroupSelects();
+  autoAssignGroup(id);
   renumberEntries(); updateSummary(id); updatePreview();
   return id;
 }
@@ -1833,7 +1867,7 @@ function updateSummary(id) {
   const min=document.getElementById(`ts_min_${id}`)?.value||'00';
   const sec=document.getElementById(`ts_sec_${id}`)?.value||'00';
   const ts=`${String(min).padStart(2,'0')}:${String(sec).padStart(2,'0')}`;
-  const opponent=document.getElementById(`opponent_${id}`)?.value||'';
+  const opponent=document.getElementById(`summary_opponent_${id}`)?.value||document.getElementById(`opponent_${id}`)?.value||'';
   const half=document.getElementById(`half_${id}`)?.value||'';
   const el=document.getElementById(`summary_${id}`);
   // 表示: 00:23　FC大阪（前半）　選手名
@@ -1849,9 +1883,12 @@ function removeEntry(id) {
 }
 
 function renumberEntries() {
-  document.querySelectorAll('.entry-card').forEach((card,i)=>{
+  let n = 0;
+  document.querySelectorAll('.entry-card').forEach((card)=>{
+    if (card.classList.contains('filtered-hidden')) return; // 絞り込みで非表示中は採番対象外
+    n++;
     const numEl=card.querySelector('.entry-num');
-    if(numEl) numEl.textContent=`SCENE #${i+1}`;
+    if(numEl) numEl.textContent=`SCENE #${n}`;
   });
 }
 
@@ -1925,7 +1962,7 @@ function parseKVLine(line) {
   return obj;
 }
 
-function getDetailRows() {
+function getDetailRows(filterPlayer) {
   const rows=[];
   document.querySelectorAll('.entry-card').forEach(card=>{
     const id=card.id.replace('entry_','');
@@ -1939,6 +1976,7 @@ function getDetailRows() {
     const opponent=document.getElementById(`opponent_${id}`)?.value||'';
     const date=(document.getElementById(`date_${id}`)?.value||'').trim();
     const player=document.getElementById(`player_${id}`)?.value||'';
+    if (filterPlayer && player !== filterPlayer) return; // 選手絞り込み中は該当選手以外を出力対象から除外
     const fields = [
       `file=${encodeKV(file + '.mp4')}`,
       `ts=${encodeKV(ts)}`,
@@ -1959,7 +1997,8 @@ function getRows() { return getDetailRows(); }
 // 記録モードに応じて適切な描画関数へ振り分けるディスパッチャとして残す。
 function updatePreview() {
   if (recordMode === 'simple') { updateSimplePreview(); return; }
-  const rows=getDetailRows();
+  applyPlayerFilterToCards();
+  const rows=getDetailRows(playerFilter);
   const header='# 書式: file=ファイル名, ts=タイムスタンプ, pre=前(秒), post=後(秒), event=大会名, opponent=対戦相手, date=日付, player=選手名';
   document.getElementById('preview').textContent=[header,...rows].join('\n');
   updateTotal();
@@ -1971,38 +2010,270 @@ function updatePreview() {
     const b=document.getElementById('previewBody'); if(b) b.style.maxHeight=b.scrollHeight+200+'px';
   }
 }
-function updateTotal() {
-  let total=0;
-  document.querySelectorAll('.entry-card').forEach(card=>{
-    const id=card.id.replace('entry_','');
-    const pre=parseFloat(document.getElementById(`pre_${id}`)?.value||0);
-    const post=parseFloat(document.getElementById(`post_${id}`)?.value||0);
-    total+=pre+post;
+// ===== グループ管理 =====
+const GROUP_MAX_SEC = 120; // 2分
+
+// 全SCENEのpre+post合計からグループ数を計算
+function calcGroupCount() {
+  let total = 0;
+  document.querySelectorAll('.entry-card').forEach(card => {
+    const id = card.id.replace('entry_', '');
+    const pre = parseFloat(document.getElementById(`pre_${id}`)?.value || 0);
+    const post = parseFloat(document.getElementById(`post_${id}`)?.value || 0);
+    total += pre + post;
   });
-  const m=Math.floor(total/60),s=Math.floor(total%60);
-  document.getElementById('totalValue').textContent=`${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
-  document.getElementById('totalWarning').style.display=total>120?'inline':'none';
+  return Math.max(1, Math.ceil(total / GROUP_MAX_SEC));
+}
+
+// 全SCENEのグループセレクトの選択肢をグループ数に合わせて更新
+function updateGroupSelects() {
+  const count = calcGroupCount();
+  document.querySelectorAll('.entry-card').forEach(card => {
+    const id = card.id.replace('entry_', '');
+    const sel = document.getElementById(`group_${id}`);
+    if (!sel) return;
+    const cur = sel.value || '1';
+    sel.innerHTML = Array.from({length: count}, (_, i) =>
+      `<option value="${i+1}" ${cur==String(i+1)?'selected':''}>G${i+1}</option>`
+    ).join('');
+  });
+  updateGroupBars();
+}
+
+// 新規SCENE追加時、前のSCENEまでのG合計が120秒を超えていたら次のGに自動振り分け
+function autoAssignGroup(newId) {
+  const groupTotals = {};
+  let assignedGroup = 1;
+  document.querySelectorAll('.entry-card').forEach(card => {
+    const id = card.id.replace('entry_', '');
+    const sel = document.getElementById(`group_${id}`);
+    if (!sel) return;
+    const pre = parseFloat(document.getElementById(`pre_${id}`)?.value || 0);
+    const post = parseFloat(document.getElementById(`post_${id}`)?.value || 0);
+    if (id === String(newId)) {
+      // 新規SCENE：現在の最大グループの合計が120秒超なら次のGへ
+      const maxG = Math.max(1, ...Object.keys(groupTotals).map(Number));
+      const curTotal = groupTotals[maxG] || 0;
+      assignedGroup = curTotal >= GROUP_MAX_SEC ? maxG + 1 : maxG;
+      sel.value = String(assignedGroup);
+    } else {
+      const g = parseInt(sel.value || '1', 10);
+      groupTotals[g] = (groupTotals[g] || 0) + pre + post;
+    }
+  });
+  updateGroupSelects();
+}
+
+// グループ変更時
+function onGroupChange(id) {
+  updateGroupBars();
+  updatePreview();
+}
+
+// グループごとの時間バーを更新
+function updateGroupBars() {
+  const count = calcGroupCount();
+  const groupTotals = {};
+  for (let g = 1; g <= count; g++) groupTotals[g] = 0;
+
+  document.querySelectorAll('.entry-card').forEach(card => {
+    const id = card.id.replace('entry_', '');
+    const g = parseInt(document.getElementById(`group_${id}`)?.value || '1', 10);
+    const pre = parseFloat(document.getElementById(`pre_${id}`)?.value || 0);
+    const post = parseFloat(document.getElementById(`post_${id}`)?.value || 0);
+    groupTotals[g] = (groupTotals[g] || 0) + pre + post;
+  });
+
+  const container = document.getElementById('groupBars');
+  if (!container) return;
+
+  // 全体合計も表示
+  const totalSec = Object.values(groupTotals).reduce((a, b) => a + b, 0);
+  const totalM = Math.floor(totalSec / 60), totalS = Math.floor(totalSec % 60);
+
+  let html = `<div class="group-bar">
+    <span class="group-bar-label">⏱ 合計</span>
+    <div><span class="group-bar-value">${String(totalM).padStart(2,'0')}:${String(totalS).padStart(2,'0')}</span></div>
+  </div>`;
+
+  for (let g = 1; g <= count; g++) {
+    const sec = groupTotals[g] || 0;
+    const m = Math.floor(sec / 60), s = Math.floor(sec % 60);
+    const over = sec > GROUP_MAX_SEC;
+    html += `<div class="group-bar${over?' over':''}">
+      <span class="group-bar-label">📦 G${g}</span>
+      <div>
+        <span class="group-bar-value">${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}</span>
+        <span class="group-bar-warn"> ⚠ 2分超</span>
+      </div>
+    </div>`;
+  }
+  container.innerHTML = html;
+}
+
+function updateTotal() {
+  updateGroupSelects();
+}
+
+// ===== 選手絞り込み表示（詳細モードのみ） =====
+let playerFilter = ''; // '' = 全員表示
+
+function renderPlayerFilterSelect() {
+  const sel = document.getElementById('playerFilterSelect');
+  if (!sel) return;
+  const players = recordMode === 'detail' ? allPlayers() : [];
+  if (playerFilter && !players.includes(playerFilter)) playerFilter = ''; // 削除された選手なら全員表示に戻す
+  sel.innerHTML = ['<option value="">表示: 全員</option>']
+    .concat(players.map(p => `<option value="${escapeHtml(p)}">${escapeHtml(p)}</option>`))
+    .join('');
+  sel.value = playerFilter;
+  sel.style.display = recordMode === 'detail' ? '' : 'none';
+  applyPlayerFilterToCards();
+}
+
+function onPlayerFilterChange() {
+  playerFilter = document.getElementById('playerFilterSelect')?.value || '';
+  applyPlayerFilterToCards();
+}
+
+function applyPlayerFilterToCards() {
+  document.querySelectorAll('.entry-card').forEach(card => {
+    if (recordMode !== 'detail' || !playerFilter) {
+      card.classList.remove('filtered-hidden');
+      return;
+    }
+    const id = card.id.replace('entry_', '');
+    const player = document.getElementById(`player_${id}`)?.value || '';
+    card.classList.toggle('filtered-hidden', player !== playerFilter);
+  });
+  renumberEntries();
+}
+
+// ===== SCENEのドラッグ＆ドロップ並べ替え（詳細／シンプル共通・PC/スマホ両対応） =====
+function initEntryDragReorder() {
+  const container = document.getElementById('entries');
+  if (!container || container.dataset.dragBound) return;
+  container.dataset.dragBound = '1';
+  container.addEventListener('pointerdown', onEntryDragPointerDown);
+}
+
+function onEntryDragPointerDown(e) {
+  if (sceneListLocked) return; // 計測中は並べ替え不可
+  const handle = e.target.closest('.drag-handle');
+  if (!handle) return;
+  const card = handle.closest('.entry-card');
+  const container = document.getElementById('entries');
+  if (!card || !container) return;
+  e.preventDefault();
+
+  // 絞り込み表示中は、実際に画面に表示されているカード同士の順序だけを入れ替え対象にする
+  const visibleCards = () => Array.from(container.querySelectorAll('.entry-card'))
+    .filter(c => !c.classList.contains('filtered-hidden'));
+
+  const rect = card.getBoundingClientRect();
+  const placeholder = document.createElement('div');
+  placeholder.className = 'entry-drag-placeholder';
+  placeholder.style.height = rect.height + 'px';
+  card.after(placeholder);
+
+  card.classList.add('dragging');
+  card.style.position = 'fixed';
+  card.style.zIndex = '999';
+  card.style.width = rect.width + 'px';
+  card.style.left = rect.left + 'px';
+  card.style.top = rect.top + 'px';
+  card.style.pointerEvents = 'none';
+
+  const startClientY = e.clientY;
+  const startTop = rect.top;
+
+  function onMove(ev) {
+    const dy = ev.clientY - startClientY;
+    card.style.top = (startTop + dy) + 'px';
+
+    const others = visibleCards().filter(c => c !== card);
+    let placed = false;
+    for (const other of others) {
+      const r = other.getBoundingClientRect();
+      const mid = r.top + r.height / 2;
+      if (ev.clientY < mid) {
+        other.parentNode.insertBefore(placeholder, other);
+        placed = true;
+        break;
+      }
+    }
+    if (!placed && others.length) {
+      const last = others[others.length - 1];
+      last.parentNode.insertBefore(placeholder, last.nextSibling);
+    }
+  }
+
+  function onUp() {
+    document.removeEventListener('pointermove', onMove);
+    document.removeEventListener('pointerup', onUp);
+    document.removeEventListener('pointercancel', onUp);
+    placeholder.parentNode.insertBefore(card, placeholder);
+    placeholder.remove();
+    card.classList.remove('dragging');
+    card.style.position = '';
+    card.style.zIndex = '';
+    card.style.width = '';
+    card.style.left = '';
+    card.style.top = '';
+    card.style.pointerEvents = '';
+    finalizeEntryReorder();
+  }
+
+  document.addEventListener('pointermove', onMove);
+  document.addEventListener('pointerup', onUp);
+  document.addEventListener('pointercancel', onUp);
+}
+
+function finalizeEntryReorder() {
+  if (recordMode === 'simple') {
+    // シンプルモードはsimpleEntries配列がデータの実体なので、DOM順に合わせて配列を再構築してから再描画する
+    const order = Array.from(document.querySelectorAll('#entries .entry-card'))
+      .map(c => parseInt(c.dataset.origIndex, 10))
+      .filter(i => !isNaN(i));
+    simpleEntries = order.map(i => simpleEntries[i]);
+    renderSimpleEntries();
+  } else {
+    // 詳細モードはDOM順がそのままデータ順（getDetailRowsがDOM順で読み取る）なので採番・プレビュー更新のみでよい
+    renumberEntries();
+    updatePreview();
+  }
 }
 
 // ===== 出力・入力 =====
+// ファイル名に使えない文字を除去・置換する（選手名をファイル名に含める際の安全対策）
+function sanitizeFileNamePart(s) {
+  return String(s).replace(/[\\/:*?"<>|]/g, '_').trim() || '選手';
+}
+
 async function exportTxt() {
   if (recordMode === 'simple') { await exportSimpleTxt(); return; }
-  const rows=getDetailRows();
-  if(!rows.length){alert('シーンがありません');return;}
+  const rows=getDetailRows(playerFilter);
+  if(!rows.length){
+    alert(playerFilter ? `「${playerFilter}」のシーンがありません` : 'シーンがありません');
+    return;
+  }
   const header='# 書式: file=ファイル名, ts=タイムスタンプ, pre=前(秒), post=後(秒), event=大会名, opponent=対戦相手, date=日付, player=選手名';
   const text=[header,...rows].join('\n');
+
+  // 選手を絞り込んで出力する場合はファイル名にも選手名を含める（全員の場合は従来通りtimestamps.txt）
+  const fileName = playerFilter ? `timestamps_${sanitizeFileNamePart(playerFilter)}.txt` : 'timestamps.txt';
 
   // Chrome/Edge: 保存先・ファイル名を毎回選択できるFile System Access APIを優先使用
   if (window.showSaveFilePicker) {
     try {
       const handle = await window.showSaveFilePicker({
-        suggestedName: 'timestamps.txt',
+        suggestedName: fileName,
         types: [{ description: 'テキストファイル', accept: { 'text/plain': ['.txt'] } }]
       });
       const writable = await handle.createWritable();
       await writable.write(text);
       await writable.close();
-      showToast('✅ timestamps.txt を保存しました');
+      showToast(`✅ ${fileName} を保存しました`);
       return;
     } catch (e) {
       if (e.name === 'AbortError') return; // ユーザーがキャンセル
@@ -2014,27 +2285,19 @@ async function exportTxt() {
   // フォールバック（Safari等）：通常のダウンロード
   const blob=new Blob([text],{type:'text/plain;charset=utf-8'});
   const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
-  a.download='timestamps.txt'; a.click();
-  showToast('✅ timestamps.txt をダウンロードしました');
+  a.download=fileName; a.click();
+  showToast(`✅ ${fileName} をダウンロードしました`);
 }
 
-// ===== 分割保存（ファイルごとにtimestamps_01.txt, _02.txt...に分けて保存） =====
+// ===== 分割保存（グループごとにtimestamps_01.txt, _02.txt...に分けて保存） =====
 async function exportSplitTxt() {
   if (recordMode === 'simple') { alert('シンプルモードでは分割保存は使えません。'); return; }
-  const rows = getDetailRows();
-  if (!rows.length) { alert('シーンがありません'); return; }
 
-  // ファイルごとにグループ化（登場順を保持）
-  const groups = [];       // [{file, rows:[...]}]
-  const fileOrder = [];    // ファイル名の登場順
+  // グループごとに行を収集
+  const groupRows = {};
   document.querySelectorAll('.entry-card').forEach(card => {
     const id = card.id.replace('entry_', '');
-    const file = (document.getElementById(`file_${id}`)?.value || '').trim();
-    if (!fileOrder.includes(file)) fileOrder.push(file);
-  });
-  fileOrder.forEach(f => groups.push({ file: f, rows: [] }));
-  document.querySelectorAll('.entry-card').forEach(card => {
-    const id = card.id.replace('entry_', '');
+    const g = parseInt(document.getElementById(`group_${id}`)?.value || '1', 10);
     const file = (document.getElementById(`file_${id}`)?.value || '').trim();
     const min = parseInt(document.getElementById(`ts_min_${id}`)?.value || '0', 10);
     const sec = parseInt(document.getElementById(`ts_sec_${id}`)?.value || '0', 10);
@@ -2055,24 +2318,24 @@ async function exportSplitTxt() {
       `date=${encodeKV(date)}`,
       `player=${encodeKV(player)}`,
     ];
-    const g = groups.find(g => g.file === file);
-    if (g) g.rows.push(fields.join(', '));
+    if (!groupRows[g]) groupRows[g] = [];
+    groupRows[g].push(fields.join(', '));
   });
 
-  const header = '# 書式: file=ファイル名, ts=タイムスタンプ, pre=前(秒), post=後(秒), event=大会名, opponent=対戦相手, date=日付, player=選手名';
-  const total = groups.length;
-  if (total === 1) {
-    alert('ファイルが1種類しかないため、通常の「出力」と同じになります。');
+  const groups = Object.keys(groupRows).map(Number).sort((a, b) => a - b);
+  if (!groups.length) { alert('シーンがありません'); return; }
+
+  if (groups.length === 1) {
+    alert('グループが1つしかないため、通常の「出力」と同じになります。');
     await exportTxt(); return;
   }
 
+  const header = '# 書式: file=ファイル名, ts=タイムスタンプ, pre=前(秒), post=後(秒), event=大会名, opponent=対戦相手, date=日付, player=選手名';
   let saved = 0;
-  for (let i = 0; i < groups.length; i++) {
-    const g = groups[i];
-    if (!g.rows.length) continue;
-    const num = String(i + 1).padStart(2, '0');
+  for (const g of groups) {
+    const num = String(g).padStart(2, '0');
     const suggestedName = `timestamps_${num}.txt`;
-    const text = [header, ...g.rows].join('\n');
+    const text = [header, ...groupRows[g]].join('\n');
     if (window.showSaveFilePicker) {
       try {
         const handle = await window.showSaveFilePicker({
@@ -2084,9 +2347,8 @@ async function exportSplitTxt() {
         await writable.close();
         saved++;
       } catch (e) {
-        if (e.name === 'AbortError') { showToast(`⚠ キャンセルされました（${saved}/${total}件保存済み）`); return; }
+        if (e.name === 'AbortError') { showToast(`⚠ キャンセルされました（${saved}/${groups.length}件保存済み）`); return; }
         console.error(e);
-        // フォールバック
         const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
         const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
         a.download = suggestedName; a.click(); saved++;
@@ -2148,10 +2410,13 @@ function importTxt(event) {
       const date = obj.date || '', player = obj.player || '';
       const fileBase=filename.replace(/\.mp4$/i,'');
       const [min,sec]=ts.split(':').map(s=>parseInt(s,10)||0);
+      // ファイル名からhalf（前半/後半/PK）を読み取る
+      const parsedFile = parseVideoFileName(fileBase);
+      const half = parsedFile ? parsedFile.half : '';
       if(ev&&!events.includes(ev))events.push(ev);
       if(opponent&&!opponents.includes(opponent))opponents.push(opponent);
       if(player&&!allPlayers().includes(player)&&!extraPlayers.includes(player))extraPlayers.push(player);
-      addEntry({file:fileBase,event:ev,opponent,date,min,sec,pre:parseInt(pre,10)||PRE_SEC,post:parseInt(post,10)||POST_SEC,player});
+      addEntry({file:fileBase,event:ev,opponent,date,min,sec,pre:parseInt(pre,10)||PRE_SEC,post:parseInt(post,10)||POST_SEC,player,half});
       imported++;
     });
     if (!imported) { alert('有効なデータが見つかりませんでした'); return; }
@@ -2187,6 +2452,8 @@ function clearAll() {
   if(!confirm('全てクリアしますか？（選択中の動画も外れます）'))return;
   document.getElementById('entries').innerHTML = '';
   unloadSelectedVideo();
+  playerFilter = '';
+  renderPlayerFilterSelect();
   if (recordMode === 'simple') {
     simpleEntries = [];
     renderSimpleEntries();
