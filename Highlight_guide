@@ -1,0 +1,921 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ハイライト動画 かんたん作成ガイド</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700;900&family=Zen+Kaku+Gothic+New:wght@400;500;700&family=Roboto+Mono:wght@400;500&display=swap');
+
+  :root {
+    --bg: #F7F4EC;
+    --pitch: #2F6B4F;
+    --pitch-dark: #224F39;
+    --pitch-light: #E7EFE6;
+    --chalk: #FFFFFF;
+    --ink: #2A2D27;
+    --ink-soft: #6F7468;
+    --line: #DDD9CB;
+    --ball: #E8A33C;
+    --ball-light: #FBEFD9;
+    --whistle: #C75C4A;
+    --whistle-light: #F8E6E1;
+    --radius: 14px;
+  }
+
+  * { box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Zen Kaku Gothic New', sans-serif;
+    line-height: 1.8;
+  }
+
+  h1, h2, h3, h4 {
+    font-family: 'Zen Maru Gothic', sans-serif;
+    color: var(--pitch-dark);
+    line-height: 1.4;
+  }
+
+  a { color: var(--pitch); }
+
+  /* ===== レイアウト ===== */
+  .layout {
+    display: flex;
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+
+  .sidebar {
+    width: 240px;
+    flex-shrink: 0;
+    padding: 32px 16px;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow-y: auto;
+    border-right: 1px dashed var(--line);
+  }
+
+  .sidebar-title {
+    font-family: 'Zen Maru Gothic', sans-serif;
+    font-weight: 900;
+    font-size: 18px;
+    color: var(--pitch-dark);
+    margin: 0 0 4px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .sidebar-sub {
+    font-size: 12px;
+    color: var(--ink-soft);
+    margin: 0 0 24px;
+  }
+
+  .nav-group {
+    margin-bottom: 18px;
+  }
+
+  .nav-group-title {
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    color: var(--ink-soft);
+    text-transform: uppercase;
+    margin-bottom: 6px;
+    font-weight: 700;
+  }
+
+  .nav-link {
+    display: block;
+    font-size: 13px;
+    color: var(--ink);
+    text-decoration: none;
+    padding: 6px 10px;
+    border-radius: 8px;
+    margin-bottom: 2px;
+    transition: background 0.15s;
+  }
+
+  .nav-link:hover { background: var(--pitch-light); }
+
+  .nav-link.troubleshoot { color: var(--whistle); }
+
+  .main {
+    flex: 1;
+    padding: 40px 32px 100px;
+    min-width: 0;
+  }
+
+  /* ===== モバイルナビ ===== */
+  .mobile-nav-toggle {
+    display: none;
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    width: 100%;
+    background: var(--chalk);
+    border: none;
+    border-bottom: 1px solid var(--line);
+    padding: 14px 20px;
+    font-family: 'Zen Maru Gothic', sans-serif;
+    font-weight: 700;
+    font-size: 15px;
+    color: var(--pitch-dark);
+    text-align: left;
+    cursor: pointer;
+  }
+
+  @media (max-width: 820px) {
+    .layout { flex-direction: column; }
+    .mobile-nav-toggle { display: block; }
+    .sidebar {
+      position: static;
+      width: 100%;
+      height: auto;
+      border-right: none;
+      border-bottom: 1px dashed var(--line);
+      display: none;
+    }
+    .sidebar.open { display: block; }
+    .main { padding: 24px 20px 80px; }
+  }
+
+  /* ===== ヒーロー ===== */
+  .hero {
+    text-align: center;
+    padding: 20px 0 36px;
+  }
+
+  .hero h1 {
+    font-size: 30px;
+    font-weight: 900;
+    margin: 0 0 12px;
+  }
+
+  .hero p {
+    color: var(--ink-soft);
+    font-size: 15px;
+    max-width: 680px;
+    margin: 0 auto;
+  }
+
+  /* ===== 全体の流れ（4ステップ） ===== */
+  .flow {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin: 28px 0 8px;
+  }
+
+  @media (max-width: 700px) {
+    .flow { grid-template-columns: repeat(2, 1fr); }
+  }
+
+  .flow-card {
+    background: var(--chalk);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 18px 14px;
+    text-align: center;
+  }
+
+  .flow-icon {
+    font-size: 28px;
+    margin-bottom: 8px;
+  }
+
+  .flow-card h4 {
+    font-size: 13px;
+    margin: 0 0 4px;
+    font-weight: 700;
+  }
+
+  .flow-card p {
+    font-size: 11px;
+    color: var(--ink-soft);
+    margin: 0;
+  }
+
+  .flow-arrow {
+    display: none;
+  }
+
+  /* ===== セクション区切り（ピッチライン風） ===== */
+  .pitch-divider {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin: 56px 0 28px;
+  }
+
+  .pitch-divider::before,
+  .pitch-divider::after {
+    content: '';
+    flex: 1;
+    height: 0;
+    border-top: 2px dashed var(--line);
+  }
+
+  .pitch-divider .badge {
+    background: var(--pitch);
+    color: #fff;
+    font-family: 'Zen Maru Gothic', sans-serif;
+    font-weight: 700;
+    font-size: 13px;
+    padding: 6px 18px;
+    border-radius: 30px;
+    white-space: nowrap;
+  }
+
+  section h2 {
+    font-size: 22px;
+    margin: 0 0 6px;
+  }
+
+  section > p.lead {
+    color: var(--ink-soft);
+    font-size: 14px;
+    margin: 0 0 24px;
+  }
+
+  /* ===== ステップカード ===== */
+  .step {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 28px;
+  }
+
+  .step-badge {
+    flex-shrink: 0;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: var(--ball);
+    color: #fff;
+    font-family: 'Zen Maru Gothic', sans-serif;
+    font-weight: 900;
+    font-size: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 0 0 4px var(--ball-light);
+  }
+
+  .step-body {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .step-body h3 {
+    font-size: 16px;
+    margin: 8px 0 8px;
+  }
+
+  .step-body p {
+    margin: 0 0 10px;
+    font-size: 14px;
+  }
+
+  .step-body ol, .step-body ul {
+    margin: 0 0 12px;
+    padding-left: 22px;
+    font-size: 14px;
+  }
+
+  .step-body li { margin-bottom: 6px; }
+
+  /* ===== コードブロック ===== */
+  .code-block {
+    position: relative;
+    background: var(--pitch-dark);
+    color: #EAF3EC;
+    border-radius: 10px;
+    padding: 12px 44px 12px 16px;
+    font-family: 'Roboto Mono', monospace;
+    font-size: 13px;
+    margin: 10px 0 14px;
+    overflow-x: auto;
+    white-space: pre;
+  }
+
+  .copy-btn {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: rgba(255,255,255,0.12);
+    border: none;
+    color: #EAF3EC;
+    font-size: 11px;
+    font-family: 'Zen Kaku Gothic New', sans-serif;
+    border-radius: 6px;
+    padding: 4px 8px;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .copy-btn:hover { background: rgba(255,255,255,0.25); }
+  .copy-btn.copied { background: var(--pitch); }
+
+  /* ===== 注意・ヒント・重要ボックス ===== */
+  .box {
+    border-radius: 10px;
+    padding: 12px 16px;
+    margin: 10px 0 14px;
+    font-size: 13px;
+  }
+
+  .box-tip {
+    background: var(--pitch-light);
+    border-left: 4px solid var(--pitch);
+  }
+
+  .box-important {
+    background: var(--ball-light);
+    border-left: 4px solid var(--ball);
+  }
+
+  .box-warn {
+    background: var(--whistle-light);
+    border-left: 4px solid var(--whistle);
+  }
+
+  .box strong { font-weight: 700; }
+  .box .box-title { display: block; margin-bottom: 4px; }
+
+  /* ===== サンプル動画 ===== */
+  .sample-video {
+    margin: 20px 0 8px;
+    text-align: center;
+  }
+
+  .sample-video video {
+    width: 100%;
+    max-width: 480px;
+    border-radius: var(--radius);
+    border: 1px solid var(--line);
+    background: #000;
+  }
+
+  .sample-caption {
+    font-size: 12px;
+    color: var(--ink-soft);
+    max-width: 480px;
+    margin: 10px auto 0;
+  }
+
+  /* ===== リンクボタン ===== */
+  .link-btn {
+    display: inline-block;
+    background: var(--pitch);
+    color: #fff;
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 700;
+    padding: 8px 16px;
+    border-radius: 8px;
+    margin: 4px 0 10px;
+  }
+
+  /* ===== トラブルシューティング ===== */
+  .qa {
+    background: var(--chalk);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 16px 18px;
+    margin-bottom: 14px;
+  }
+
+  .qa h4 {
+    font-size: 14px;
+    margin: 0 0 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .qa h4::before {
+    content: 'Q';
+    background: var(--whistle);
+    color: #fff;
+    font-family: 'Zen Maru Gothic', sans-serif;
+    font-size: 12px;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .qa p {
+    font-size: 13px;
+    margin: 0;
+    padding-left: 30px;
+  }
+
+  /* ===== フォルダ構成図 ===== */
+  .folder-tree {
+    background: var(--chalk);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 16px 20px;
+    font-family: 'Roboto Mono', monospace;
+    font-size: 13px;
+    line-height: 1.9;
+    margin: 12px 0 14px;
+    overflow-x: auto;
+    white-space: pre;
+  }
+
+  /* ===== フッター ===== */
+  footer {
+    text-align: center;
+    font-size: 12px;
+    color: var(--ink-soft);
+    padding: 32px 0;
+  }
+</style>
+</head>
+<body>
+
+<button class="mobile-nav-toggle" onclick="document.getElementById('sidebar').classList.toggle('open')">
+  ☰ 目次を開く
+</button>
+
+<div class="layout">
+
+  <!-- サイドバー -->
+  <nav class="sidebar" id="sidebar">
+    <p class="sidebar-title">⚽ ハイライトガイド</p>
+    <p class="sidebar-sub">子供たちのナイスプレー集を<br>自動でつくる方法</p>
+
+    <div class="nav-group">
+      <p class="nav-group-title">はじめに</p>
+      <a class="nav-link" href="#intro">できること</a>
+      <a class="nav-link" href="#flow">全体の流れ</a>
+    </div>
+
+    <div class="nav-group">
+      <p class="nav-group-title">準備（最初の1回だけ）</p>
+      <a class="nav-link" href="#setup-python">① Pythonの準備</a>
+      <a class="nav-link" href="#setup-ffmpeg">② ffmpegの準備</a>
+      <a class="nav-link" href="#setup-pillow">③ Pillowの準備</a>
+      <a class="nav-link" href="#setup-folder">④ フォルダの準備</a>
+    </div>
+
+    <div class="nav-group">
+      <p class="nav-group-title">毎回の作業</p>
+      <a class="nav-link" href="#step-save">① 動画を保存</a>
+      <a class="nav-link" href="#step-record">② いいプレーを記録</a>
+      <a class="nav-link" href="#step-generate">③ 動画を自動生成</a>
+      <a class="nav-link" href="#step-share">④ 確認＆共有</a>
+    </div>
+
+    <div class="nav-group">
+      <p class="nav-group-title">困ったとき</p>
+      <a class="nav-link troubleshoot" href="#cmd-basics">コマンドプロンプトの基本</a>
+      <a class="nav-link troubleshoot" href="#troubleshoot">トラブルシューティング</a>
+    </div>
+  </nav>
+
+  <!-- メイン -->
+  <main class="main">
+
+    <!-- ヒーロー -->
+    <div class="hero" id="intro">
+      <h1>⚽ ハイライト動画 かんたん作成ガイド</h1>
+      <p>毎試合撮っている動画から、子供たちのナイスプレーだけを集めた動画を、パソコンが自動で作ってくれます。最初の準備だけ少し手間がかかりますが、それ以降はとてもシンプルです。</p>
+    </div>
+
+    <!-- 全体の流れ -->
+    <section id="flow">
+      <h2>全体の流れ</h2>
+      <p class="lead">毎試合、この4ステップを繰り返すだけです。</p>
+      <div class="flow">
+        <div class="flow-card">
+          <div class="flow-icon">📱</div>
+          <h4>① 動画を保存</h4>
+          <p>Bandの試合動画をパソコンに保存</p>
+        </div>
+        <div class="flow-card">
+          <div class="flow-icon">⏱️</div>
+          <h4>② いいプレーを記録</h4>
+          <p>見ながらタイムスタンプをメモ</p>
+        </div>
+        <div class="flow-card">
+          <div class="flow-icon">🤖</div>
+          <h4>③ 自動で生成</h4>
+          <p>ボタン1つでハイライト動画が完成</p>
+        </div>
+        <div class="flow-card">
+          <div class="flow-icon">🎉</div>
+          <h4>④ 確認＆共有</h4>
+          <p>完成した動画をチームに共有</p>
+        </div>
+      </div>
+      <div class="box box-tip">
+        <strong class="box-title">💡 最初に1回だけの準備が必要です</strong>
+        パソコンに「Python」「ffmpeg」というツールをインストールします。聞いたことがなくても大丈夫です。下から順番に進めてください。
+      </div>
+
+      <div class="sample-video">
+        <video controls preload="metadata" playsinline>
+          <source src="sample_highlight.mp4" type="video/mp4">
+        </video>
+        <p class="sample-caption">📹 完成イメージ（サンプル）：テロップ・フェード・BGMは、このような仕上がりになります。選手名やBGMの曲は、お好きなものに差し替わります。</p>
+      </div>
+    </section>
+
+    <!-- ===================== 初回セットアップ ===================== -->
+    <div class="pitch-divider"><span class="badge">準備編：最初の1回だけ</span></div>
+
+    <section id="setup-python">
+      <h2>① Pythonをインストールする</h2>
+      <p class="lead">「Python（パイソン）」は、動画を自動加工するための土台になるプログラムです。</p>
+
+      <div class="step">
+        <div class="step-badge">1</div>
+        <div class="step-body">
+          <p>ブラウザで以下のページを開きます。</p>
+          <a class="link-btn" href="https://www.python.org/downloads/" target="_blank">Python公式サイトを開く</a>
+          <p>「Download Python 3.x.x」という大きな黄色いボタンをクリックして、インストーラーをダウンロードします。</p>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-badge">2</div>
+        <div class="step-body">
+          <p>ダウンロードしたファイル（<code>python-3.x.x-amd64.exe</code>）をダブルクリックして起動します。</p>
+          <div class="box box-important">
+            <strong class="box-title">⚠️ ここが一番重要です</strong>
+            インストール画面が開いたら、画面の下のほうにある「<strong>Add python.exe to PATH</strong>」というチェックボックスに、<strong>必ずチェックを入れて</strong>ください。これを忘れると、後の作業でエラーになります。
+          </div>
+          <p>チェックを入れたら、「Install Now」をクリックしてインストールを進めます。完了したら「Close」で閉じてOKです。</p>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-badge">3</div>
+        <div class="step-body">
+          <h3>正しくインストールできたか確認する</h3>
+          <p>キーボードの <code>Windowsキー</code> を押しながら <code>R</code> を押し、出てきた小さな画面に <code>cmd</code> と入力して Enter を押します。黒い画面（コマンドプロンプト）が開きます。</p>
+          <p>そこに以下を入力して Enter を押します。</p>
+          <div class="code-block" data-copy="python --version">python --version<button class="copy-btn" onclick="copyCode(this)">コピー</button></div>
+          <p><code>Python 3.x.x</code> のようにバージョンが表示されればOKです。</p>
+          <div class="box box-warn">
+            <strong class="box-title">「'python' は、内部コマンドまたは...として認識されていません」と出たら</strong>
+            手順2の「Add python.exe to PATH」のチェックが漏れています。Pythonをもう一度インストールし直してください（一度アンインストールしてから入れ直すと確実です）。
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="setup-ffmpeg">
+      <h2>② ffmpegをインストールする</h2>
+      <p class="lead">「ffmpeg（エフエムペグ）」は、動画の切り出しや結合を行うツールです。</p>
+
+      <div class="step">
+        <div class="step-badge">1</div>
+        <div class="step-body">
+          <p>以下のページを開きます。</p>
+          <a class="link-btn" href="https://www.gyan.dev/ffmpeg/builds/" target="_blank">ffmpegダウンロードページを開く</a>
+          <p>ページ内の「release builds」というところにある「<code>ffmpeg-release-essentials.zip</code>」をクリックしてダウンロードします。</p>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-badge">2</div>
+        <div class="step-body">
+          <p>ダウンロードしたzipファイルを右クリックして「すべて展開」を選びます。展開されたフォルダの中に、さらに <code>ffmpeg-x.x-essentials_build</code> のようなフォルダがあります。</p>
+          <p>このフォルダの名前を <strong>「ffmpeg」</strong> に変えて、<strong>Cドライブの直下（C:\）</strong> に移動してください。</p>
+          <p>最終的に <code>C:\ffmpeg\bin\ffmpeg.exe</code> というファイルが存在する状態にします。</p>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-badge">3</div>
+        <div class="step-body">
+          <h3>パソコンにffmpegの場所を教える（PATH設定）</h3>
+          <p>以下の手順で進めます。</p>
+          <ol>
+            <li>スタートボタンを右クリックして「システム」を選ぶ</li>
+            <li>「システムの詳細設定」をクリック（右側または検索で出てきます）</li>
+            <li>「環境変数」ボタンをクリック</li>
+            <li>上の欄（ユーザー環境変数）にある「Path」を選んで「編集」をクリック</li>
+            <li>「新規」をクリックし、<code>C:\ffmpeg\bin</code> と入力</li>
+            <li>「OK」を押して、開いている画面をすべて「OK」で閉じる</li>
+          </ol>
+          <div class="box box-tip">
+            <strong class="box-title">💡 文字で読むと難しそうに見えますが…</strong>
+            操作自体は「フォルダの場所をひとつ登録するだけ」です。間違えても大きな問題にはならないので、慎重に進めれば大丈夫です。
+          </div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-badge">4</div>
+        <div class="step-body">
+          <h3>正しく設定できたか確認する</h3>
+          <p><strong>新しく</strong>コマンドプロンプトを開き（開いていたものは閉じてから）、以下を入力します。</p>
+          <div class="code-block" data-copy="ffmpeg -version">ffmpeg -version<button class="copy-btn" onclick="copyCode(this)">コピー</button></div>
+          <p>バージョン情報がたくさん表示されればOKです。</p>
+          <div class="box box-warn">
+            <strong class="box-title">「'ffmpeg' は...認識されていません」と出たら</strong>
+            <code>C:\ffmpeg\bin</code> の場所が間違っている可能性があります。<code>ffmpeg.exe</code> が実際にそのフォルダにあるか確認し、手順3をやり直してください。
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="setup-pillow">
+      <h2>③ Pillow（画像処理ライブラリ）をインストールする</h2>
+      <p class="lead">テロップ（文字）を動画に重ねるために必要なツールです。1コマンドで完了します。</p>
+
+      <div class="step">
+        <div class="step-badge">1</div>
+        <div class="step-body">
+          <p>コマンドプロンプトを開き、以下を入力してEnterを押します。</p>
+          <div class="code-block" data-copy="pip install Pillow">pip install Pillow<button class="copy-btn" onclick="copyCode(this)">コピー</button></div>
+          <p>最後に <code>Successfully installed Pillow-x.x.x</code> と表示されれば完了です。</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="setup-folder">
+      <h2>④ 作業用フォルダを準備する</h2>
+      <p class="lead">配布されたzipファイルを解凍すると、必要なファイルが揃った状態のフォルダができます。</p>
+
+      <div class="step">
+        <div class="step-badge">1</div>
+        <div class="step-body">
+          <p>配布された <code>highlight_tool.zip</code> を、デスクトップなど好きな場所に置き、右クリックして「すべて展開」を選びます。</p>
+          <p><strong>「highlight_tool」</strong> という名前のフォルダができ、その中に必要なファイルがすべて入っています。</p>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-badge">2</div>
+        <div class="step-body">
+          <p>フォルダの中身は以下の通りです。</p>
+          <div class="folder-tree">highlight_tool/
+├── highlight_guide.html           ← このガイド
+├── sample_highlight.mp4           ← 完成イメージのサンプル動画
+├── timestamp_editor.html          ← タイムスタンプ記録ツール
+├── start_timestamp_editor.bat     ← ライブ映像（OBS等）を使うときに開く
+├── make_highlight.py              ← ハイライト動画を自動生成するプログラム
+├── run.bat                        ← ダブルクリックで実行
+├── timestamps_sample.txt          ← 入力例
+├── README.md                      ← 補足説明
+├── bgm.mp3                        ← BGM（サンプル曲同梱済み・お好きな曲に差し替え可）
+└── videos/                        ← 試合動画を入れるフォルダ</div>
+        </div>
+      </div>
+
+      <div class="box box-tip">
+        <strong class="box-title">✅ 準備はこれで完了です！</strong>
+        ここまでの作業は<strong>最初の1回だけ</strong>です。次から毎試合行う作業に進みましょう。
+      </div>
+    </section>
+
+    <!-- ===================== 毎回の作業フロー ===================== -->
+    <div class="pitch-divider"><span class="badge">実践編：毎試合の作業</span></div>
+
+    <section id="step-save">
+      <h2>① Bandの動画をパソコンに保存する</h2>
+      <p class="lead">動画ファイルは容量が大きいため、スマホでの保存・転送はおすすめしません。パソコンのブラウザからBandにアクセスして、直接保存します。</p>
+
+      <div class="step">
+        <div class="step-badge">1</div>
+        <div class="step-body">
+          <p>パソコンのブラウザでBand（Webサイト版）を開き、試合動画が投稿されている画面を表示します。</p>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-badge">2</div>
+        <div class="step-body">
+          <p>動画を右クリックし、「動画を保存」または「名前を付けて保存」を選んでパソコンにダウンロードします。</p>
+          <div class="box box-tip">
+            <strong class="box-title">💡 保存先メニューに「動画を保存」が出てこない場合</strong>
+            動画が再生されている画面でもう一度クリックしてから右クリックすると表示されることがあります。表示されない場合は、動画を開いた状態でブラウザの「ダウンロード」機能を確認してください。
+          </div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-badge">3</div>
+        <div class="step-body">
+          <p>保存した動画ファイルを、<code>highlight_tool</code> フォルダの中の <code>videos</code> フォルダに入れます。</p>
+          <p>ファイル名は、わかりやすいシンプルな名前（半角英数字）に変えておくと、次のステップで入力しやすくなります。</p>
+          <div class="code-block" data-copy="game1.mp4">例: game1.mp4<button class="copy-btn" onclick="copyCode(this)">コピー</button></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="step-record">
+      <h2>② いいプレーのタイムスタンプを記録する</h2>
+      <p class="lead">動画を見ながら、ナイスプレーが出た瞬間をツールに記録していきます。選手名ボタンを押すだけで自動的に記録されます。</p>
+
+      <div class="step">
+        <div class="step-badge">1</div>
+        <div class="step-body">
+          <p><code>timestamp_editor.html</code> をダブルクリックして、ブラウザで開きます。</p>
+          <p>開くと<strong>「⚙ 設定」画面</strong>が自動で表示されます。ここで今日の試合の情報を登録します。</p>
+          <div class="box box-tip">
+            <strong class="box-title">💡 OBSのライブ映像を使う場合</strong>
+            動画ファイルではなく、OBSの仮想カメラなどでライブ映像を見ながら記録したい場合は、<code>timestamp_editor.html</code> を直接開く代わりに <code>start_timestamp_editor.bat</code> をダブルクリックして開いてください。
+          </div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-badge">2</div>
+        <div class="step-body">
+          <p>設定画面の「🏟 今日の試合設定」に、ファイル名・日付・大会名・対戦相手を入力します。</p>
+          <p>「👤 選手名」の欄に、チームの選手名を登録します（初回のみ。次からは残っています）。</p>
+          <p>入力が終わったら「完了」を押します。</p>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-badge">3</div>
+        <div class="step-body">
+          <p>画面左側の「📂 動画ファイルを選択」ボタンを押して、<code>videos</code> フォルダに入れた試合動画を選びます。</p>
+          <p>動画がブラウザ内に表示されたら再生を開始します。</p>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-badge">4</div>
+        <div class="step-body">
+          <p>いいプレーが出た瞬間に、画面右側の<strong>選手名ボタン</strong>をタップします。</p>
+          <p>タップした瞬間のタイムスタンプが自動で記録され、その下に「SCENE」が即座に追加されます。動画は再生したまま続けられます。</p>
+          <div class="box box-tip">
+            <strong class="box-title">💡 SCENEの内容を調整したいときは</strong>
+            SCENEをクリックすると詳細が開き、前後の切り出し秒数・タイムスタンプ・選手名などを変更できます。「▶ 確認」ボタンを押すと、動画がそのシーンの位置に移動して確認できます。
+          </div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-badge">5</div>
+        <div class="step-body">
+          <p>記録が終わったら、画面下部の「📥 timestamps.txt を出力」ボタンを押します。</p>
+          <p>ダウンロードされた <code>timestamps.txt</code> を、<code>highlight_tool</code> フォルダの中に移動します（同じ名前のファイルがあれば上書きしてOKです）。</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="step-generate">
+      <h2>③ ハイライト動画を自動生成する</h2>
+      <p class="lead">ここからはパソコンにお任せです。</p>
+
+      <div class="step">
+        <div class="step-badge">1</div>
+        <div class="step-body">
+          <p><code>highlight_tool</code> フォルダの中の <code>run.bat</code> をダブルクリックします。</p>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-badge">2</div>
+        <div class="step-body">
+          <p>黒い画面（コマンドプロンプト）が開き、処理の様子が表示されます。動画の長さによりますが、数分かかることもあります。</p>
+          <div class="box box-tip">
+            <strong class="box-title">💡 この画面は閉じずに待ちましょう</strong>
+            「続行するには何かキーを押してください」と表示されたら処理完了です。
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="step-share">
+      <h2>④ 完成した動画を確認して共有する</h2>
+      <p class="lead">いよいよ完成です！</p>
+
+      <div class="step">
+        <div class="step-badge">1</div>
+        <div class="step-body">
+          <p><code>highlight_tool</code> フォルダの中の <code>output</code> フォルダを開きます。<code>highlight_20260613_xxxxxx.mp4</code> のようなファイルができています。</p>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-badge">2</div>
+        <div class="step-body">
+          <p>ダブルクリックして再生し、内容を確認します。</p>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-badge">3</div>
+        <div class="step-body">
+          <p>問題なければ、Google Driveなどお使いのクラウドストレージにアップロードして、チームの皆さんに共有しましょう🎉</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="cmd-basics">
+      <h2>コマンドプロンプトの基本操作</h2>
+      <p class="lead">この資料の中で何度か出てくる「黒い画面」の使い方です。慣れない方向けの補足です。</p>
+
+      <div class="step">
+        <div class="step-badge">1</div>
+        <div class="step-body">
+          <h3>開き方</h3>
+          <p><code>Windowsキー</code> を押しながら <code>R</code> を押すと小さな入力欄が出ます。そこに <code>cmd</code> と入力して Enter を押すと開きます。</p>
+          <p>または、スタートボタンを押して「コマンドプロンプト」と入力して検索する方法でもOKです。</p>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-badge">2</div>
+        <div class="step-body">
+          <h3>文字の貼り付け方</h3>
+          <p>このガイドのコードブロックにある「コピー」ボタンを押すと、内容がコピーされます。コマンドプロンプトの画面の上で右クリックすると貼り付けられます（<code>Ctrl + V</code> でも貼り付けできる場合もあります）。</p>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-badge">3</div>
+        <div class="step-body">
+          <h3>実行のしかた</h3>
+          <p>文字を入力（または貼り付け）したら、<code>Enter</code> キーを押すと実行されます。</p>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-badge">4</div>
+        <div class="step-body">
+          <h3>エラーが出たときは</h3>
+          <p>赤い文字や見慣れない英語の文章が表示されたら、その画面の文字を範囲選択してコピーし（左上のアイコンから「マークして範囲指定」→ドラッグ→Enter、または右クリックメニューから）、その内容をそのまま管理者に送ってください。</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== トラブルシューティング ===================== -->
+    <section id="troubleshoot">
+      <h2>トラブルシューティング</h2>
+      <p class="lead">よくある質問とその対処法です。</p>
+
+      <div class="qa">
+        <h4>「'python' は、内部コマンドまたは外部コマンド...」と表示される</h4>
+        <p>Pythonのインストール時に「Add python.exe to PATH」のチェックを入れ忘れています。Pythonを一度アンインストールし、チェックを入れて再インストールしてください。</p>
+      </div>
+
+      <div class="qa">
+        <h4>「'ffmpeg' は、内部コマンドまたは外部コマンド...」と表示される</h4>
+        <p><code>C:\ffmpeg\bin</code> に <code>ffmpeg.exe</code> が実際に存在するか確認してください。場所が違う場合は、環境変数の設定を見直してください（②の手順3を参照）。</p>
+      </div>
+
+      <div class="qa">
+        <h4>文字（テロップ）が四角や小さいピクセルで表示される</h4>
+        <p>パソコンに日本語フォントが見つからない場合に起こります。<code>make_highlight.py</code> のフォント設定を見直す必要があるので、管理者に動画を見せて相談してください。</p>
+      </div>
+
+      <div class="qa">
+        <h4>run.bat を実行しても何も起こらない／すぐ消える</h4>
+        <p><code>timestamps.txt</code> が <code>highlight_tool</code> フォルダの中に正しく置かれているか確認してください。また、<code>videos</code> フォルダの中に、<code>timestamps.txt</code> で指定したファイル名と同じ動画があるか確認してください。</p>
+      </div>
+
+      <div class="qa">
+        <h4>動画が完成したけど、画質がよくない・処理が遅い</h4>
+        <p>画質を上げる設定にすると処理時間が伸びます。これは仕様なので、気になる場合は管理者に相談してください。</p>
+      </div>
+
+      <div class="qa">
+        <h4>その他、わからないことがあったら</h4>
+        <p>エラーが出た画面のスクリーンショットを撮って、管理者に送ってください。画面の文字情報があると、原因を特定しやすくなります。</p>
+      </div>
+    </section>
+
+    <footer>
+      ⚽ Highlight Tool Guide
+    </footer>
+
+  </main>
+</div>
+
+<script>
+function copyCode(btn) {
+  const block = btn.closest('.code-block');
+  const text = block.getAttribute('data-copy');
+  navigator.clipboard.writeText(text).then(() => {
+    btn.textContent = 'コピーしました';
+    btn.classList.add('copied');
+    setTimeout(() => {
+      btn.textContent = 'コピー';
+      btn.classList.remove('copied');
+    }, 1800);
+  });
+}
+</script>
+
+</body>
+</html>
