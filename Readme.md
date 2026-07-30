@@ -12,7 +12,6 @@
 | `highlight_guide.html` | 保護者向けの使い方ガイド（最初に開くファイル） |
 | `sample_highlight.mp4` | ガイド内で再生されるサンプル動画 |
 | `timestamp_editor.html` | タイムスタンプ記録ツール（動画ファイル／ライブ映像を1画面で切り替え可能） |
-| `start_timestamp_editor.bat` | `timestamp_editor.html` をローカルサーバー経由（`http://localhost:8000`）で開くバッチファイル |
 | `make_highlight.py` | ハイライト動画を自動生成するメインスクリプト（`timestamps.txt` 用） |
 | `run.bat` | `make_highlight.py` を実行するバッチファイル |
 | `timestamps_sample.txt` | タイムスタンプファイルの記入例 |
@@ -27,8 +26,7 @@
 `timestamp_editor.html` は以下の軸を切り替えられます。
 
 - **動画入力**：画面上部のタブで「📂 動画ファイル」⇄「📷 ライブ映像（OBS仮想カメラ等）」を切り替え
-  - ライブ映像（カメラ）を使う場合は、ブラウザのセキュリティ制約上 `file://` で直接開くことができません。必ず `start_timestamp_editor.bat` からローカルサーバー（`http://localhost:8000`）経由で開いてください。動画ファイルのみを使う場合は、`timestamp_editor.html` をダブルクリックして `file://` で直接開いても問題ありません。
-  - ライブ映像モードのうち「👁 見るだけ（OBS）」モードでは、ストップウォッチの開始・停止を `Num+` / `Num-` キーで操作できます（OBSの録画開始・停止ホットキーと同時押しする想定）。「⏺ アプリ内録画（iPhone）」モードではこのホットキーは効かず、画面上のREC／停止ボタンで操作します。計測中はシーン一覧の確認・削除・手動追加がロックされます。
+  - ライブ映像モードでは、ストップウォッチの開始・停止を `Num+` / `Num-` キーで操作できます（OBSの録画開始・停止ホットキーと同時押しする想定）。計測中はシーン一覧の確認・削除・手動追加がロックされます。
 - **記録方法**：選手ボタンをタップしてSCENEを記録します。選手名・大会名・対戦相手・前後秒数（シーンごとに調整可）を記録し、`timestamps.txt` を出力します。
 
 ### シーンの並べ替え（ドラッグ＆ドロップ）
@@ -67,9 +65,9 @@
 file=game1.mp4, ts=12:34, pre=10, post=15, event=春季大会, opponent=××FC, date=2026-06-07, player=田中
 ```
 
+- 各項目は `キー=値` の形式で、カンマ区切りで並びます。
 - 「対戦相手」を入力すると、テロップ1行目に「大会名　日付　VS ○○」として表示されます。
 - 対戦相手が無い場合（練習試合など）は空欄でOKです。
-- 通常の「📥 出力」と「✂️ 分割保存」はどちらも同じkey=value形式で出力されます。
 
 ---
 
@@ -90,4 +88,3 @@ file=game1.mp4, ts=12:34, pre=10, post=15, event=春季大会, opponent=××FC, 
 | `UnicodeDecodeError` 関連のエラー | `make_highlight.py` 内の `subprocess.run` に `encoding="utf-8", errors="replace"` が設定されているか確認 |
 | `filter_complex` の parse エラー | drawtext構文ではなくPillowによる画像合成方式に切り替え済み。古いバージョンを使っていないか確認 |
 | 選手名・大会名・対戦相手リストをリセットしたい | ブラウザの開発者ツールでlocalStorageの `hl_roster_players` / `hl_events` / `hl_opponents` を削除 |
-| ライブ映像モードでカメラ一覧に何も出ない／空欄 | `start_timestamp_editor.bat` 経由（`http://localhost:8000`）で開いているか確認。`file://` で直接開くとブラウザがカメラアクセスを許可しません |
