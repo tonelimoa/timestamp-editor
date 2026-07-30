@@ -10,7 +10,6 @@
 | ファイル | 役割 |
 |---|---|
 | `highlight_guide.html` | 保護者向けの使い方ガイド（最初に開くファイル） |
-| `sample_highlight.mp4` | ガイド内で再生されるサンプル動画 |
 | `timestamp_editor.html` | タイムスタンプ記録ツール（動画ファイル／ライブ映像を1画面で切り替え可能） |
 | `make_highlight.py` | ハイライト動画を自動生成するメインスクリプト（`timestamps.txt` 用） |
 | `run.bat` | `make_highlight.py` を実行するバッチファイル |
