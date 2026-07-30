@@ -526,7 +526,7 @@
 
       <div class="sample-video">
         <video controls preload="metadata" playsinline>
-          <source src="sample_highlight.mp4" type="video/mp4">
+          <source src="https://github.com/user-attachments/assets/4742210a-347d-4fcc-9cb5-84874b8db009" type="video/mp4">
         </video>
         <p class="sample-caption">📹 完成イメージ（サンプル）：テロップ・フェード・BGMは、このような仕上がりになります。選手名やBGMの曲は、お好きなものに差し替わります。</p>
       </div>
@@ -726,7 +726,7 @@
         <div class="step-badge">1</div>
         <div class="step-body">
           <p><code>timestamp_editor.html</code> をダブルクリックして、ブラウザで開きます。</p>
-          <p><strong>はじめて使うときだけ</strong>、選手登録の画面が自動で表示されます。チームの選手名を登録してください（2回目以降は表示されず、登録した内容がそのまま使えます）。</p>
+          <p>開くと<strong>「⚙ 設定」画面</strong>が自動で表示されます。ここで今日の試合の情報を登録します。</p>
           <div class="box box-tip">
             <strong class="box-title">💡 OBSのライブ映像を使う場合</strong>
             動画ファイルではなく、OBSの仮想カメラなどでライブ映像を見ながら記録したい場合は、<code>timestamp_editor.html</code> を直接開く代わりに <code>start_timestamp_editor.bat</code> をダブルクリックして開いてください。
@@ -737,16 +737,17 @@
       <div class="step">
         <div class="step-badge">2</div>
         <div class="step-body">
-          <p>画面上部の「📂 動画ファイルを選択」ボタンを押して、<code>videos</code> フォルダに入れた試合動画を選びます。</p>
-          <p>動画を選ぶと、ファイル名（<code>大会名_対戦相手_01.mp4</code>の形式）から大会名・対戦相手が自動で読み取られ、通知が表示されます。動画がブラウザ内に表示されたら再生を開始します。</p>
+          <p>設定画面の「🏟 今日の試合設定」に、ファイル名・日付・大会名・対戦相手を入力します。</p>
+          <p>「👤 選手名」の欄に、チームの選手名を登録します（初回のみ。次からは残っています）。</p>
+          <p>入力が終わったら「完了」を押します。</p>
         </div>
       </div>
 
       <div class="step">
         <div class="step-badge">3</div>
         <div class="step-body">
-          <p>ヘッダーの「⚙ 設定（選手名・日付）」ボタンを押すと、設定画面が開きます。「🏟 今日の試合設定」の大会名・対戦相手は手順2で自動入力済みなので、<strong>日付だけ確認・入力</strong>すればOKです。選手を追加したい場合も、ここの「👤 選手名」欄から登録できます。</p>
-          <p>入力が終わったら「完了」を押します。</p>
+          <p>画面左側の「📂 動画ファイルを選択」ボタンを押して、<code>videos</code> フォルダに入れた試合動画を選びます。</p>
+          <p>動画がブラウザ内に表示されたら再生を開始します。</p>
         </div>
       </div>
 
@@ -765,7 +766,7 @@
       <div class="step">
         <div class="step-badge">5</div>
         <div class="step-body">
-          <p>記録が終わったら、画面上部の「📥 出力」ボタンを押します。</p>
+          <p>記録が終わったら、画面下部の「📥 timestamps.txt を出力」ボタンを押します。</p>
           <p>ダウンロードされた <code>timestamps.txt</code> を、<code>highlight_tool</code> フォルダの中に移動します（同じ名前のファイルがあれば上書きしてOKです）。</p>
         </div>
       </div>
