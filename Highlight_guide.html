@@ -642,27 +642,36 @@
 
     <section id="setup-folder">
       <h2>④ 作業用フォルダを準備する</h2>
-      <p class="lead">配布されたzipファイルを解凍すると、必要なファイルが揃った状態のフォルダができます。</p>
+      <p class="lead">GitHubのページから一式をダウンロードすると、必要なファイルが揃った状態のフォルダができます。</p>
 
       <div class="step">
         <div class="step-badge">1</div>
         <div class="step-body">
-          <p>配布された <code>highlight_tool.zip</code> を、デスクトップなど好きな場所に置き、右クリックして「すべて展開」を選びます。</p>
-          <p><strong>「highlight_tool」</strong> という名前のフォルダができ、その中に必要なファイルがすべて入っています。</p>
+          <p>下記のURLをブラウザで開きます。</p>
+          <div class="code-block" data-copy="https://github.com/tonelimoa/timestamp-editor">https://github.com/tonelimoa/timestamp-editor<button class="copy-btn" onclick="copyCode(this)">コピー</button></div>
+          <p>緑色の「<strong>Code</strong>」ボタンをクリックし、「<strong>Download ZIP</strong>」を選びます。</p>
         </div>
       </div>
 
       <div class="step">
         <div class="step-badge">2</div>
         <div class="step-body">
+          <p>ダウンロードしたZIPファイルを、デスクトップなど好きな場所に置き、右クリックして「すべて展開」を選びます。</p>
+          <p><strong>「timestamp-editor-main」</strong> という名前のフォルダができ、その中に必要なファイルがすべて入っています。</p>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-badge">3</div>
+        <div class="step-body">
           <p>フォルダの中身は以下の通りです。</p>
-          <div class="folder-tree">highlight_tool/
-├── highlight_guide.html           ← このガイド
-├── timestamp_editor.html          ← タイムスタンプ記録ツール
-├── make_highlight.py              ← ハイライト動画を自動生成するプログラム
+          <div class="folder-tree">timestamp-editor-main/
+├── Highlight_guide.html           ← このガイド
+├── index.html                     ← タイムスタンプ記録ツール（Web版と同じもの・通常は使いません）
+├── Make_highlight.py              ← ハイライト動画を自動生成するプログラム
 ├── run.bat                        ← ダブルクリックで実行
 ├── timestamps_sample.txt          ← 入力例
-├── README.md                      ← 補足説明
+├── Readme.md                      ← 補足説明
 ├── bgm.mp3                        ← BGM（サンプル曲同梱済み・お好きな曲に差し替え可）
 └── videos/                        ← 試合動画を入れるフォルダ</div>
         </div>
@@ -702,7 +711,7 @@
       <div class="step">
         <div class="step-badge">3</div>
         <div class="step-body">
-          <p>保存した動画ファイルを、<code>highlight_tool</code> フォルダの中の <code>videos</code> フォルダに入れます。</p>
+          <p>保存した動画ファイルを、<code>timestamp-editor-main</code> フォルダの中の <code>videos</code> フォルダに入れます。</p>
           <p>ファイル名は、わかりやすいシンプルな名前（半角英数字）に変えておくと、次のステップで入力しやすくなります。</p>
           <div class="code-block" data-copy="game1.mp4">例: game1.mp4<button class="copy-btn" onclick="copyCode(this)">コピー</button></div>
         </div>
@@ -716,7 +725,8 @@
       <div class="step">
         <div class="step-badge">1</div>
         <div class="step-body">
-          <p><code>timestamp_editor.html</code> をダブルクリックして、ブラウザで開きます。</p>
+          <p>ブラウザ（スマホでもパソコンでもOK）で下記のURLを開きます。ダウンロードやインストールは不要です。</p>
+          <div class="code-block" data-copy="https://tonelimoa.github.io/timestamp-editor/">https://tonelimoa.github.io/timestamp-editor/<button class="copy-btn" onclick="copyCode(this)">コピー</button></div>
           <p>開くと<strong>「⚙ 設定」画面</strong>が自動で表示されます。ここで今日の試合の情報を登録します。</p>
         </div>
       </div>
@@ -754,7 +764,7 @@
         <div class="step-badge">5</div>
         <div class="step-body">
           <p>記録が終わったら、画面下部の「📥 timestamps.txt を出力」ボタンを押します。</p>
-          <p>ダウンロードされた <code>timestamps.txt</code> を、<code>highlight_tool</code> フォルダの中に移動します（同じ名前のファイルがあれば上書きしてOKです）。</p>
+          <p>ダウンロードされた <code>timestamps.txt</code> を、<code>timestamp-editor-main</code> フォルダの中に移動します（同じ名前のファイルがあれば上書きしてOKです）。</p>
         </div>
       </div>
     </section>
@@ -766,7 +776,7 @@
       <div class="step">
         <div class="step-badge">1</div>
         <div class="step-body">
-          <p><code>highlight_tool</code> フォルダの中の <code>run.bat</code> をダブルクリックします。</p>
+          <p><code>timestamp-editor-main</code> フォルダの中の <code>run.bat</code> をダブルクリックします。</p>
         </div>
       </div>
 
@@ -789,7 +799,7 @@
       <div class="step">
         <div class="step-badge">1</div>
         <div class="step-body">
-          <p><code>highlight_tool</code> フォルダの中の <code>output</code> フォルダを開きます。<code>highlight_20260613_xxxxxx.mp4</code> のようなファイルができています。</p>
+          <p><code>timestamp-editor-main</code> フォルダの中の <code>output</code> フォルダを開きます。<code>highlight_20260613_xxxxxx.mp4</code> のようなファイルができています。</p>
         </div>
       </div>
 
@@ -868,7 +878,7 @@
 
       <div class="qa">
         <h4>run.bat を実行しても何も起こらない／すぐ消える</h4>
-        <p><code>timestamps.txt</code> が <code>highlight_tool</code> フォルダの中に正しく置かれているか確認してください。また、<code>videos</code> フォルダの中に、<code>timestamps.txt</code> で指定したファイル名と同じ動画があるか確認してください。</p>
+        <p><code>timestamps.txt</code> が <code>timestamp-editor-main</code> フォルダの中に正しく置かれているか確認してください。また、<code>videos</code> フォルダの中に、<code>timestamps.txt</code> で指定したファイル名と同じ動画があるか確認してください。</p>
       </div>
 
       <div class="qa">
