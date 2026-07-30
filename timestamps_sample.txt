@@ -1,0 +1,4 @@
+# 書式: file=ファイル名, ts=タイムスタンプ, pre=前(秒), post=後(秒), event=大会名, opponent=対戦相手, date=日付, player=選手名
+file=HighlightCUP_SampleFC_01.mp4, ts=05:12, pre=7, post=3, event=HighlightCUP, opponent=Sample FC, date=2026-07-30, player=Alex
+file=HighlightCUP_SampleFC_01.mp4, ts=12:47, pre=7, post=3, event=HighlightCUP, opponent=Sample FC, date=2026-07-30, player=Lio
+file=HighlightCUP_SampleFC_01.mp4, ts=18:30, pre=7, post=3, event=HighlightCUP, opponent=Sample FC, date=2026-07-30, player=Ronald
