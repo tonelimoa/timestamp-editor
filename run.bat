@@ -1,3 +1,3 @@
 @echo off
-python make_highlight.py
+python Make_highlight.py
 pause

@@ -1,6 +1,6 @@
 # Highlight Tool - 管理者向け技術メモ
 
-保護者向けの使い方は `highlight_guide.html` を参照してください。
+保護者向けの使い方は `Highlight_guide.html` を参照してください。
 このファイルは、ツールを管理・カスタマイズする方向けの補足情報です。
 
 ---
@@ -9,10 +9,10 @@
 
 | ファイル | 役割 |
 |---|---|
-| `highlight_guide.html` | 保護者向けの使い方ガイド（最初に開くファイル） |
+| `Highlight_guide.html` | 保護者向けの使い方ガイド（最初に開くファイル） |
 | `index.html` | タイムスタンプ記録ツール（動画ファイル／ライブ映像を1画面で切り替え可能） |
-| `make_highlight.py` | ハイライト動画を自動生成するメインスクリプト（`timestamps.txt` 用） |
-| `run.bat` | `make_highlight.py` を実行するバッチファイル |
+| `Make_highlight.py` | ハイライト動画を自動生成するメインスクリプト（`timestamps.txt` 用） |
+| `run.bat` | `Make_highlight.py` を実行するバッチファイル |
 | `timestamps_sample.txt` | タイムスタンプファイルの記入例 |
 | `videos/` | 元動画（MP4）を入れるフォルダ（同梱済み。中にMP4を入れて使う） |
 | `output/` | 生成されたハイライト動画の出力先（自動作成） |
@@ -41,7 +41,7 @@
 
 ## カスタマイズ可能な設定値
 
-`make_highlight.py` の先頭付近にある定数を変更することで、挙動を調整できます。
+`Make_highlight.py` の先頭付近にある定数を変更することで、挙動を調整できます。
 
 | 定数 | 内容 | 初期値 |
 |---|---|---|
@@ -84,6 +84,6 @@ file=game1.mp4, ts=12:34, pre=10, post=15, event=春季大会, opponent=××FC, 
 | 症状 | 対処 |
 |---|---|
 | `python` / `ffmpeg` が見つからない | 環境変数PATHの設定を確認（ガイド内「コマンドプロンプトの基本」参照） |
-| `UnicodeDecodeError` 関連のエラー | `make_highlight.py` 内の `subprocess.run` に `encoding="utf-8", errors="replace"` が設定されているか確認 |
+| `UnicodeDecodeError` 関連のエラー | `Make_highlight.py` 内の `subprocess.run` に `encoding="utf-8", errors="replace"` が設定されているか確認 |
 | `filter_complex` の parse エラー | drawtext構文ではなくPillowによる画像合成方式に切り替え済み。古いバージョンを使っていないか確認 |
 | 選手名・大会名・対戦相手リストをリセットしたい | ブラウザの開発者ツールでlocalStorageの `hl_roster_players` / `hl_events` / `hl_opponents` を削除 |
